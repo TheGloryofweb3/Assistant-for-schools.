@@ -1,0 +1,1551 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1" />
+<title>God's Heritage Group of Schools — AI Teaching Assistant</title>
+
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,500;0,9..144,600;1,9..144,500&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+
+<style>
+/* ============================================================
+   0. TOKENS
+   ============================================================ */
+:root{
+  --white:#ffffff;
+  --bg-1:#f9f7fd;
+  --bg-2:#f1ebfb;
+  --lilac:#c9a6f2;
+  --lilac-soft:#e2cffa;
+  --lavender:#e8defb;
+  --violet:#7c4fe0;
+  --violet-dark:#5a35b8;
+  --violet-deep:#3c2266;
+  --ink:#241b36;
+  --muted:#8a7ea6;
+  --muted-soft:#b3a8c9;
+  --glass:rgba(255,255,255,0.55);
+  --glass-strong:rgba(255,255,255,0.78);
+  --glass-border:rgba(255,255,255,0.7);
+  --line:rgba(124,79,224,0.14);
+  --shadow-soft:0 10px 40px rgba(124,79,224,0.14);
+  --shadow-lift:0 20px 60px rgba(92,53,184,0.22);
+  --radius-xl:28px;
+  --radius-lg:22px;
+  --radius-md:16px;
+  --radius-sm:11px;
+  --font-display:'Fraunces', serif;
+  --font-body:'Plus Jakarta Sans', sans-serif;
+  --font-mono:'JetBrains Mono', monospace;
+  --fs-scale:1;
+}
+
+[data-theme="dark"]{
+  --white:#1a1428;
+  --bg-1:#141020;
+  --bg-2:#1c1630;
+  --lilac:#8a5fe0;
+  --lilac-soft:#4a3670;
+  --lavender:#2a2144;
+  --violet:#9a72f0;
+  --violet-dark:#7c4fe0;
+  --violet-deep:#c9a6f2;
+  --ink:#f1ecfb;
+  --muted:#a99bc9;
+  --muted-soft:#6f6390;
+  --glass:rgba(36,27,54,0.55);
+  --glass-strong:rgba(36,27,54,0.78);
+  --glass-border:rgba(154,114,240,0.22);
+  --line:rgba(154,114,240,0.18);
+  --shadow-soft:0 10px 40px rgba(0,0,0,0.35);
+  --shadow-lift:0 20px 60px rgba(0,0,0,0.45);
+}
+
+*{ box-sizing:border-box; margin:0; padding:0; }
+html{ font-size:16px; }
+body{
+  font-family:var(--font-body);
+  background:var(--bg-1);
+  color:var(--ink);
+  min-height:100vh;
+  overflow:hidden;
+  font-size:calc(1rem * var(--fs-scale));
+  -webkit-font-smoothing:antialiased;
+  transition:background .4s ease, color .4s ease;
+}
+button{ font-family:inherit; cursor:pointer; border:none; background:none; color:inherit; }
+input, textarea, select{ font-family:inherit; color:inherit; }
+::selection{ background:var(--lilac-soft); }
+::-webkit-scrollbar{ width:8px; height:8px; }
+::-webkit-scrollbar-thumb{ background:var(--lilac-soft); border-radius:10px; }
+::-webkit-scrollbar-track{ background:transparent; }
+a{ color:var(--violet); }
+
+.glass{
+  background:var(--glass);
+  backdrop-filter:blur(24px) saturate(160%);
+  -webkit-backdrop-filter:blur(24px) saturate(160%);
+  border:1px solid var(--glass-border);
+  box-shadow:var(--shadow-soft);
+}
+
+/* ============================================================
+   1. ANIMATED BACKGROUND
+   ============================================================ */
+.bg-scene{
+  position:fixed; inset:0; z-index:0; overflow:hidden;
+  background:radial-gradient(120% 100% at 10% 0%, var(--bg-2), var(--bg-1) 60%);
+}
+.blob{
+  position:absolute; border-radius:50%;
+  filter:blur(60px); opacity:.55;
+  background:radial-gradient(circle at 30% 30%, var(--lilac), transparent 70%);
+  animation:float 22s ease-in-out infinite;
+}
+.blob-a{ width:480px; height:480px; top:-140px; left:-120px; animation-duration:26s; }
+.blob-b{ width:420px; height:420px; bottom:-160px; right:-100px; background:radial-gradient(circle at 60% 40%, var(--lavender), transparent 70%); animation-duration:32s; animation-delay:-6s; }
+.blob-c{ width:340px; height:340px; top:35%; left:55%; background:radial-gradient(circle at 50% 50%, var(--lilac-soft), transparent 70%); animation-duration:24s; animation-delay:-12s; }
+@keyframes float{
+  0%,100%{ transform:translate(0,0) scale(1); }
+  33%{ transform:translate(40px,-30px) scale(1.08); }
+  66%{ transform:translate(-30px,25px) scale(0.94); }
+}
+.particles{ position:absolute; inset:0; }
+.particle{
+  position:absolute; width:5px; height:5px; border-radius:50%;
+  background:var(--violet); opacity:.25;
+  animation:drift linear infinite;
+}
+@keyframes drift{
+  0%{ transform:translateY(0) translateX(0); opacity:0; }
+  10%{ opacity:.35; }
+  90%{ opacity:.2; }
+  100%{ transform:translateY(-100vh) translateX(30px); opacity:0; }
+}
+
+/* ============================================================
+   2. AUTH SCREEN
+   ============================================================ */
+.auth-screen{
+  position:fixed; inset:0; z-index:20;
+  display:flex; align-items:center; justify-content:center;
+  padding:24px;
+  animation:fadeIn .6s ease;
+}
+.auth-screen.hidden{ display:none; }
+.auth-card{
+  width:100%; max-width:440px;
+  border-radius:var(--radius-xl);
+  padding:44px 38px 34px;
+  position:relative;
+  animation:cardRise .7s cubic-bezier(.2,.8,.2,1);
+}
+@keyframes cardRise{
+  from{ opacity:0; transform:translateY(24px) scale(.97); }
+  to{ opacity:1; transform:translateY(0) scale(1); }
+}
+.auth-brand{ text-align:center; margin-bottom:28px; }
+.brand-mark{
+  width:56px; height:56px; border-radius:18px; margin:0 auto 14px;
+  display:flex; align-items:center; justify-content:center;
+  background:linear-gradient(135deg, var(--violet), var(--violet-dark));
+  color:#fff; font-family:var(--font-display); font-weight:600; font-size:1.3rem;
+  box-shadow:0 12px 30px rgba(124,79,224,.4);
+  animation:pulseGlow 3.5s ease-in-out infinite;
+}
+@keyframes pulseGlow{
+  0%,100%{ box-shadow:0 12px 30px rgba(124,79,224,.35); }
+  50%{ box-shadow:0 14px 42px rgba(124,79,224,.55); }
+}
+.brand-name{ font-size:.78rem; letter-spacing:.06em; text-transform:uppercase; color:var(--muted); font-weight:600; }
+.auth-title{ font-family:var(--font-display); font-weight:600; font-size:1.7rem; margin-top:6px; }
+
+.auth-tabs{
+  display:flex; background:var(--lavender); border-radius:999px; padding:4px; margin-bottom:26px;
+}
+.auth-tab{
+  flex:1; padding:10px 0; border-radius:999px; font-weight:600; font-size:.88rem;
+  color:var(--muted); transition:all .35s ease; position:relative; z-index:1;
+}
+.auth-tab.active{ background:var(--white); color:var(--violet-dark); box-shadow:0 4px 14px rgba(124,79,224,.18); }
+
+.auth-form{ display:none; flex-direction:column; gap:14px; animation:fadeIn .4s ease; }
+.auth-form.active{ display:flex; }
+
+.field{ display:flex; flex-direction:column; gap:6px; }
+.field label{ font-size:.78rem; font-weight:600; color:var(--muted); }
+.field input{
+  padding:13px 16px; border-radius:var(--radius-md); border:1px solid var(--line);
+  background:rgba(255,255,255,.55); font-size:.92rem; transition:all .25s ease;
+}
+[data-theme="dark"] .field input{ background:rgba(255,255,255,.06); }
+.field input:focus{ outline:none; border-color:var(--violet); box-shadow:0 0 0 4px rgba(124,79,224,.14); }
+
+.auth-row{ display:flex; align-items:center; justify-content:space-between; font-size:.82rem; }
+.remember{ display:flex; align-items:center; gap:7px; color:var(--muted); }
+.remember input{ accent-color:var(--violet); }
+.link-btn{ color:var(--violet); font-weight:600; }
+.link-btn:hover{ text-decoration:underline; }
+
+.btn-primary{
+  padding:14px; border-radius:var(--radius-md); font-weight:700; font-size:.95rem; color:#fff;
+  background:linear-gradient(135deg, var(--violet), var(--violet-dark));
+  box-shadow:0 12px 28px rgba(124,79,224,.35);
+  transition:transform .25s ease, box-shadow .25s ease;
+  display:flex; align-items:center; justify-content:center; gap:8px;
+}
+.btn-primary:hover{ transform:translateY(-2px); box-shadow:0 16px 36px rgba(124,79,224,.45); }
+.btn-primary:active{ transform:translateY(0); }
+.btn-primary:disabled{ opacity:.6; cursor:not-allowed; transform:none; }
+
+.divider{ display:flex; align-items:center; gap:10px; color:var(--muted-soft); font-size:.78rem; margin:6px 0; }
+.divider::before,.divider::after{ content:''; flex:1; height:1px; background:var(--line); }
+
+.btn-google{
+  display:flex; align-items:center; justify-content:center; gap:10px;
+  padding:12px; border-radius:var(--radius-md); border:1px solid var(--line);
+  background:rgba(255,255,255,.6); font-weight:600; font-size:.9rem; transition:all .25s ease;
+}
+[data-theme="dark"] .btn-google{ background:rgba(255,255,255,.05); }
+.btn-google:hover{ background:var(--white); transform:translateY(-1px); }
+
+.auth-msg{ font-size:.8rem; padding:10px 14px; border-radius:var(--radius-sm); display:none; }
+.auth-msg.show{ display:block; animation:fadeIn .3s ease; }
+.auth-msg.error{ background:rgba(230,80,80,.12); color:#c23a3a; }
+.auth-msg.success{ background:rgba(80,190,140,.12); color:#2f9e6f; }
+
+/* ============================================================
+   3. APP SHELL
+   ============================================================ */
+#app{ position:fixed; inset:0; z-index:10; display:none; }
+#app.visible{ display:flex; }
+
+.sidebar{
+  width:280px; flex-shrink:0; display:flex; flex-direction:column;
+  padding:18px 14px; gap:14px; transition:width .35s ease, padding .35s ease;
+  border-right:1px solid var(--glass-border);
+  position:relative; z-index:5;
+}
+.sidebar.collapsed{ width:76px; padding:18px 10px; }
+.sidebar.collapsed .label-text,
+.sidebar.collapsed .section-title,
+.sidebar.collapsed .conv-item span,
+.sidebar.collapsed .proj-item span{ display:none; }
+.sidebar.collapsed .sidebar-brand span{ display:none; }
+
+.sidebar-brand{ display:flex; align-items:center; gap:10px; padding:4px 6px 8px; }
+.sidebar-brand .mark{
+  width:34px; height:34px; border-radius:11px; flex-shrink:0;
+  background:linear-gradient(135deg, var(--violet), var(--violet-dark));
+  display:flex; align-items:center; justify-content:center; color:#fff; font-weight:700; font-size:.8rem;
+  font-family:var(--font-display);
+}
+.sidebar-brand span{ font-size:.78rem; font-weight:700; letter-spacing:.02em; line-height:1.15; }
+
+.sidebar-btn{
+  display:flex; align-items:center; gap:10px; padding:11px 12px; border-radius:var(--radius-md);
+  font-size:.86rem; font-weight:600; color:var(--ink); transition:all .22s ease; white-space:nowrap; overflow:hidden;
+}
+.sidebar-btn:hover{ background:var(--lavender); }
+.sidebar-btn.primary{
+  background:linear-gradient(135deg, var(--violet), var(--violet-dark)); color:#fff;
+  box-shadow:0 8px 20px rgba(124,79,224,.3);
+}
+.sidebar-btn.primary:hover{ transform:translateY(-1px); box-shadow:0 10px 26px rgba(124,79,224,.4); }
+.sidebar-btn svg{ flex-shrink:0; width:18px; height:18px; }
+
+.sidebar-search{ position:relative; }
+.sidebar-search input{
+  width:100%; padding:10px 12px 10px 36px; border-radius:var(--radius-md); border:1px solid var(--line);
+  background:rgba(255,255,255,.5); font-size:.84rem;
+}
+[data-theme="dark"] .sidebar-search input{ background:rgba(255,255,255,.05); }
+.sidebar-search svg{ position:absolute; left:11px; top:50%; transform:translateY(-50%); width:15px; height:15px; color:var(--muted); }
+
+.sidebar-scroll{ flex:1; overflow-y:auto; display:flex; flex-direction:column; gap:18px; padding-right:2px; }
+.section-title{
+  font-size:.68rem; text-transform:uppercase; letter-spacing:.08em; font-weight:700; color:var(--muted-soft);
+  padding:0 6px; display:flex; align-items:center; justify-content:space-between;
+}
+.section-title button{ color:var(--violet); font-size:.9rem; }
+
+.proj-item, .conv-item{
+  display:flex; align-items:center; gap:9px; padding:9px 10px; border-radius:var(--radius-sm);
+  font-size:.83rem; color:var(--ink); cursor:pointer; transition:all .2s ease; position:relative;
+  white-space:nowrap; overflow:hidden;
+}
+.proj-item:hover, .conv-item:hover{ background:var(--lavender); }
+.conv-item.active{ background:var(--lavender); font-weight:700; }
+.conv-item span, .proj-item span{ flex:1; overflow:hidden; text-overflow:ellipsis; }
+.conv-item .conv-actions{ display:none; gap:4px; }
+.conv-item:hover .conv-actions{ display:flex; }
+.conv-actions button{ width:22px; height:22px; border-radius:7px; display:flex; align-items:center; justify-content:center; }
+.conv-actions button:hover{ background:rgba(124,79,224,.15); }
+.conv-actions svg{ width:13px; height:13px; }
+.pin-icon{ color:var(--violet); }
+
+.tools-grid{ display:flex; flex-direction:column; gap:2px; }
+.tool-item{
+  display:flex; align-items:center; gap:10px; padding:9px 10px; border-radius:var(--radius-sm);
+  font-size:.82rem; transition:all .2s ease;
+}
+.tool-item:hover{ background:var(--lavender); transform:translateX(2px); }
+.tool-item .ticon{
+  width:26px; height:26px; border-radius:9px; display:flex; align-items:center; justify-content:center; flex-shrink:0;
+  background:var(--lavender); color:var(--violet-dark); transition:transform .3s ease;
+}
+.tool-item:hover .ticon{ transform:rotate(-8deg) scale(1.08); background:var(--lilac-soft); }
+
+.sidebar-footer{ display:flex; align-items:center; gap:10px; padding:8px 6px; border-top:1px solid var(--line); padding-top:14px; }
+.user-avatar{
+  width:36px; height:36px; border-radius:12px; flex-shrink:0;
+  background:linear-gradient(135deg, var(--lilac), var(--violet));
+  display:flex; align-items:center; justify-content:center; color:#fff; font-weight:700; font-size:.85rem;
+}
+.user-meta{ overflow:hidden; flex:1; }
+.user-meta .uname{ font-size:.82rem; font-weight:700; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.user-meta .uschool{ font-size:.7rem; color:var(--muted); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.collapse-toggle{
+  width:30px; height:30px; border-radius:9px; display:flex; align-items:center; justify-content:center;
+  color:var(--muted); flex-shrink:0;
+}
+.collapse-toggle:hover{ background:var(--lavender); }
+
+/* ============================================================
+   4. MAIN COLUMN
+   ============================================================ */
+.main-col{ flex:1; display:flex; flex-direction:column; min-width:0; position:relative; }
+
+.topbar{
+  display:flex; align-items:center; justify-content:space-between;
+  padding:14px 26px; border-bottom:1px solid var(--glass-border); z-index:4;
+}
+.topbar-left{ display:flex; align-items:center; gap:12px; }
+.topbar-brand{ display:flex; align-items:center; gap:10px; }
+.topbar-brand .school-logo{
+  width:32px; height:32px; border-radius:10px;
+  background:linear-gradient(135deg, var(--violet), var(--violet-dark));
+  display:flex; align-items:center; justify-content:center; color:#fff; font-size:.72rem; font-weight:700; font-family:var(--font-display);
+}
+.topbar-brand .school-name{ font-size:.85rem; font-weight:700; }
+.model-pill{
+  display:flex; align-items:center; gap:7px; padding:6px 14px; border-radius:999px;
+  background:var(--lavender); font-size:.76rem; font-weight:700; color:var(--violet-dark); cursor:pointer;
+}
+.model-pill .dot{ width:7px; height:7px; border-radius:50%; background:#3fd18a; box-shadow:0 0 0 3px rgba(63,209,138,.25); }
+.topbar-right{ display:flex; align-items:center; gap:10px; }
+.icon-btn{
+  width:38px; height:38px; border-radius:12px; display:flex; align-items:center; justify-content:center;
+  color:var(--muted); transition:all .2s ease;
+}
+.icon-btn:hover{ background:var(--lavender); color:var(--violet-dark); }
+.icon-btn svg{ width:19px; height:19px; }
+.mobile-only{ display:none; }
+
+/* ============================================================
+   5. WELCOME SCREEN
+   ============================================================ */
+.welcome-screen{
+  flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center;
+  padding:40px 24px; overflow-y:auto; text-align:center;
+}
+.welcome-illustration{ width:120px; height:120px; margin-bottom:22px; position:relative; }
+.welcome-illustration .ring{
+  position:absolute; inset:0; border-radius:50%;
+  border:2px solid var(--lilac-soft); animation:spin 14s linear infinite;
+}
+.welcome-illustration .ring2{ inset:14px; border-color:var(--lilac); animation:spin 10s linear infinite reverse; }
+.welcome-illustration .core{
+  position:absolute; inset:34px; border-radius:50%;
+  background:linear-gradient(135deg, var(--violet), var(--violet-dark));
+  display:flex; align-items:center; justify-content:center; box-shadow:0 20px 50px rgba(124,79,224,.4);
+  animation:floaty 4s ease-in-out infinite;
+}
+.welcome-illustration .core svg{ width:26px; height:26px; color:#fff; }
+@keyframes spin{ to{ transform:rotate(360deg); } }
+@keyframes floaty{ 0%,100%{ transform:translateY(0); } 50%{ transform:translateY(-8px); } }
+
+.welcome-heading{ font-family:var(--font-display); font-weight:300; font-size:2.6rem; color:var(--muted); line-height:1.1; }
+.welcome-heading strong{ display:block; font-weight:600; color:var(--ink); font-size:1.05em; margin-top:2px; }
+
+.suggestion-grid{
+  margin-top:34px; display:grid; grid-template-columns:repeat(auto-fit, minmax(210px, 1fr));
+  gap:14px; max-width:920px; width:100%;
+}
+.suggestion-card{
+  padding:18px; border-radius:var(--radius-lg); text-align:left; display:flex; flex-direction:column; gap:10px;
+  transition:transform .3s cubic-bezier(.2,.8,.2,1), box-shadow .3s ease; opacity:0; transform:translateY(14px);
+  animation:cardIn .5s ease forwards;
+}
+@keyframes cardIn{ to{ opacity:1; transform:translateY(0); } }
+.suggestion-card:hover{ transform:translateY(-5px); box-shadow:var(--shadow-lift); }
+.suggestion-card .sicon{
+  width:34px; height:34px; border-radius:11px; display:flex; align-items:center; justify-content:center;
+  background:linear-gradient(135deg, var(--lilac-soft), var(--lavender)); color:var(--violet-dark);
+}
+.suggestion-card p{ font-size:.85rem; font-weight:700; }
+.suggestion-card span{ font-size:.72rem; color:var(--muted); }
+
+/* ============================================================
+   6. CHAT
+   ============================================================ */
+.chat-scroll{ flex:1; overflow-y:auto; padding:26px 0 10px; }
+.chat-inner{ max-width:820px; margin:0 auto; padding:0 26px; display:flex; flex-direction:column; gap:22px; }
+
+.msg{ display:flex; gap:12px; animation:msgIn .35s cubic-bezier(.2,.8,.2,1); }
+@keyframes msgIn{ from{ opacity:0; transform:translateY(10px); } to{ opacity:1; transform:translateY(0); } }
+.msg.user{ flex-direction:row-reverse; }
+.msg-avatar{
+  width:32px; height:32px; border-radius:10px; flex-shrink:0; display:flex; align-items:center; justify-content:center;
+  font-size:.7rem; font-weight:700; color:#fff;
+}
+.msg.user .msg-avatar{ background:linear-gradient(135deg, var(--lilac), var(--violet)); }
+.msg.assistant .msg-avatar{ background:linear-gradient(135deg, var(--violet-dark), var(--violet-deep)); }
+.msg-body{ max-width:78%; display:flex; flex-direction:column; gap:8px; }
+.msg.user .msg-body{ align-items:flex-end; }
+.bubble{
+  padding:14px 18px; border-radius:var(--radius-lg); font-size:.92rem; line-height:1.62;
+}
+.msg.user .bubble{
+  background:linear-gradient(135deg, var(--violet), var(--violet-dark)); color:#fff; border-bottom-right-radius:6px;
+}
+.msg.assistant .bubble{ border-bottom-left-radius:6px; }
+.bubble p{ margin:0 0 10px; }
+.bubble p:last-child{ margin-bottom:0; }
+.bubble ul, .bubble ol{ margin:8px 0 8px 20px; }
+.bubble li{ margin-bottom:4px; }
+.bubble h1,.bubble h2,.bubble h3{ font-family:var(--font-display); margin:10px 0 6px; }
+.bubble code{
+  font-family:var(--font-mono); background:rgba(124,79,224,.1); padding:2px 6px; border-radius:6px; font-size:.85em;
+}
+.msg.user .bubble code{ background:rgba(255,255,255,.2); }
+.bubble pre{
+  background:var(--violet-deep); color:#f1ecfb; padding:14px 16px; border-radius:var(--radius-md); overflow-x:auto; margin:10px 0;
+}
+.bubble pre code{ background:none; padding:0; font-size:.82rem; }
+.bubble table{ border-collapse:collapse; width:100%; margin:10px 0; font-size:.85rem; }
+.bubble th, .bubble td{ border:1px solid var(--line); padding:7px 10px; text-align:left; }
+.bubble th{ background:var(--lavender); }
+
+.msg-actions{ display:flex; gap:4px; }
+.msg-actions button{
+  width:28px; height:28px; border-radius:9px; display:flex; align-items:center; justify-content:center;
+  color:var(--muted); transition:all .2s ease;
+}
+.msg-actions button:hover{ background:var(--lavender); color:var(--violet-dark); }
+.msg-actions button.liked{ color:#3fd18a; }
+.msg-actions button.disliked{ color:#e05a5a; }
+.msg-actions svg{ width:14px; height:14px; }
+
+.thinking-dots{ display:flex; gap:5px; padding:14px 18px; }
+.thinking-dots span{
+  width:7px; height:7px; border-radius:50%; background:var(--violet); opacity:.4;
+  animation:dotPulse 1.2s ease-in-out infinite;
+}
+.thinking-dots span:nth-child(2){ animation-delay:.15s; }
+.thinking-dots span:nth-child(3){ animation-delay:.3s; }
+@keyframes dotPulse{ 0%,80%,100%{ opacity:.3; transform:scale(.85); } 40%{ opacity:1; transform:scale(1.1); } }
+
+.stream-cursor{ display:inline-block; width:2px; height:1em; background:var(--violet); vertical-align:middle; animation:blink 1s step-start infinite; margin-left:2px; }
+@keyframes blink{ 50%{ opacity:0; } }
+
+/* ============================================================
+   7. INPUT AREA
+   ============================================================ */
+.input-zone{ padding:14px 26px 22px; }
+.input-wrap{
+  max-width:820px; margin:0 auto; border-radius:var(--radius-xl); padding:12px 12px 10px;
+  display:flex; flex-direction:column; gap:8px; transition:box-shadow .3s ease;
+}
+.input-wrap:focus-within{ box-shadow:0 0 0 4px rgba(124,79,224,.15), var(--shadow-soft); }
+.input-wrap textarea{
+  width:100%; border:none; background:transparent; resize:none; font-size:.94rem; line-height:1.5;
+  max-height:160px; padding:8px 10px; font-family:inherit;
+}
+.input-wrap textarea:focus{ outline:none; }
+.input-toolbar{ display:flex; align-items:center; justify-content:space-between; padding:0 4px; }
+.input-toolbar-left{ display:flex; align-items:center; gap:4px; }
+.char-count{ font-size:.72rem; color:var(--muted-soft); }
+.send-btn{
+  width:38px; height:38px; border-radius:13px; display:flex; align-items:center; justify-content:center;
+  background:var(--lavender); color:var(--muted); transition:all .3s cubic-bezier(.2,.8,.2,1);
+}
+.send-btn.ready{
+  background:linear-gradient(135deg, var(--violet), var(--violet-dark)); color:#fff;
+  box-shadow:0 8px 22px rgba(124,79,224,.4); animation:sendPulse 1.8s ease-in-out infinite;
+}
+@keyframes sendPulse{ 0%,100%{ box-shadow:0 8px 22px rgba(124,79,224,.35); } 50%{ box-shadow:0 10px 30px rgba(124,79,224,.55); } }
+.send-btn svg{ width:17px; height:17px; }
+.input-hint{ text-align:center; font-size:.68rem; color:var(--muted-soft); margin-top:6px; }
+
+/* ============================================================
+   8. MODALS
+   ============================================================ */
+.modal-overlay{
+  position:fixed; inset:0; z-index:50; display:none; align-items:center; justify-content:center;
+  background:rgba(36,27,54,.35); backdrop-filter:blur(4px); padding:20px; animation:fadeIn .25s ease;
+}
+.modal-overlay.show{ display:flex; }
+.modal-box{
+  width:100%; max-width:460px; border-radius:var(--radius-xl); padding:28px; max-height:85vh; overflow-y:auto;
+  animation:cardRise .4s cubic-bezier(.2,.8,.2,1);
+}
+.modal-box h2{ font-family:var(--font-display); font-size:1.3rem; margin-bottom:18px; }
+.modal-close{ position:absolute; top:18px; right:18px; }
+.settings-section{ margin-bottom:20px; }
+.settings-section h3{ font-size:.75rem; text-transform:uppercase; letter-spacing:.06em; color:var(--muted); margin-bottom:10px; }
+.settings-row{ display:flex; align-items:center; justify-content:space-between; padding:10px 0; }
+.seg-control{ display:flex; background:var(--lavender); border-radius:999px; padding:3px; }
+.seg-control button{ padding:7px 14px; border-radius:999px; font-size:.78rem; font-weight:600; color:var(--muted); }
+.seg-control button.active{ background:var(--white); color:var(--violet-dark); box-shadow:0 3px 10px rgba(124,79,224,.18); }
+.select-input{ padding:8px 12px; border-radius:var(--radius-sm); border:1px solid var(--line); background:rgba(255,255,255,.5); font-size:.82rem; }
+.danger-btn{ color:#e05a5a; font-size:.82rem; font-weight:700; padding:8px 14px; border-radius:var(--radius-sm); }
+.danger-btn:hover{ background:rgba(224,90,90,.1); }
+
+/* ============================================================
+   9. RESPONSIVE
+   ============================================================ */
+@media (max-width: 880px){
+  .sidebar{ position:fixed; left:0; top:0; bottom:0; width:280px; background:var(--bg-1); transform:translateX(-100%); transition:transform .35s ease; }
+  .sidebar.mobile-open{ transform:translateX(0); box-shadow:20px 0 60px rgba(0,0,0,.15); }
+  .sidebar.collapsed{ width:280px; padding:18px 14px; }
+  .sidebar.collapsed .label-text,.sidebar.collapsed .section-title,.sidebar.collapsed .conv-item span,.sidebar.collapsed .proj-item span,.sidebar.collapsed .sidebar-brand span{ display:block; }
+  .mobile-only{ display:flex; }
+  .topbar-brand .school-name{ display:none; }
+  .msg-body{ max-width:88%; }
+  .suggestion-grid{ grid-template-columns:1fr 1fr; }
+}
+@media (max-width: 520px){
+  .suggestion-grid{ grid-template-columns:1fr; }
+  .welcome-heading{ font-size:2rem; }
+  .chat-inner, .input-wrap{ padding-left:14px; padding-right:14px; }
+}
+
+@keyframes fadeIn{ from{ opacity:0; } to{ opacity:1; } }
+
+.skeleton{ border-radius:var(--radius-md); background:linear-gradient(90deg, var(--lavender) 25%, var(--lilac-soft) 50%, var(--lavender) 75%); background-size:200% 100%; animation:shimmer 1.6s ease-in-out infinite; }
+@keyframes shimmer{ 0%{ background-position:200% 0; } 100%{ background-position:-200% 0; } }
+</style>
+</head>
+<body data-theme="light">
+
+<div class="bg-scene" aria-hidden="true">
+  <div class="blob blob-a"></div>
+  <div class="blob blob-b"></div>
+  <div class="blob blob-c"></div>
+  <div class="particles" id="particles"></div>
+</div>
+
+<!-- ============================================================
+     AUTH SCREEN
+     ============================================================ -->
+<div id="authScreen" class="auth-screen">
+  <div class="auth-card glass">
+    <div class="auth-brand">
+      <div class="brand-mark">GH</div>
+      <p class="brand-name">God's Heritage Group of Schools</p>
+      <h1 class="auth-title">AI Teaching Assistant</h1>
+    </div>
+
+    <div class="auth-tabs">
+      <button class="auth-tab active" data-tab="login" onclick="switchAuthTab('login')">Sign In</button>
+      <button class="auth-tab" data-tab="signup" onclick="switchAuthTab('signup')">Create Account</button>
+    </div>
+
+    <div id="authMsg" class="auth-msg"></div>
+
+    <form id="loginForm" class="auth-form active" onsubmit="return handleLogin(event)">
+      <div class="field"><label>Teacher Name</label><input type="text" id="loginName" placeholder="e.g. Mrs. Adebayo" required></div>
+      <div class="field"><label>Email Address</label><input type="email" id="loginEmail" placeholder="you@school.com" required></div>
+      <div class="field"><label>Password</label><input type="password" id="loginPassword" placeholder="••••••••" required></div>
+      <div class="auth-row">
+        <label class="remember"><input type="checkbox" id="rememberMe" checked> Remember me</label>
+        <button type="button" class="link-btn" onclick="handleForgotPassword()">Forgot password?</button>
+      </div>
+      <button type="submit" class="btn-primary" id="loginBtn">Sign In</button>
+      <div class="divider">or</div>
+      <button type="button" class="btn-google" onclick="handleGoogleSignIn()">
+        <svg width="18" height="18" viewBox="0 0 48 48"><path fill="#FFC107" d="M43.6 20.5H42V20H24v8h11.3C33.7 32.9 29.3 36 24 36c-6.6 0-12-5.4-12-12s5.4-12 12-12c3.1 0 5.8 1.1 8 3l6-6C34.6 5.1 29.6 3 24 3 12.4 3 3 12.4 3 24s9.4 21 21 21 21-9.4 21-21c0-1.4-.1-2.4-.4-3.5z"/><path fill="#FF3D00" d="M6.3 14.7l6.6 4.8C14.6 15.9 18.9 13 24 13c3.1 0 5.8 1.1 8 3l6-6C34.6 5.1 29.6 3 24 3c-7.5 0-13.9 4.2-17.7 11.7z"/><path fill="#4CAF50" d="M24 45c5.5 0 10.4-1.9 14.3-5.1l-6.6-5.4C29.6 36.2 26.9 37 24 37c-5.3 0-9.6-3.1-11.3-7.6l-6.6 5.1C9.9 40.7 16.4 45 24 45z"/><path fill="#1976D2" d="M43.6 20.5H42V20H24v8h11.3c-.8 2.3-2.3 4.3-4.2 5.7l6.6 5.4C41.5 35.6 45 30.3 45 24c0-1.4-.1-2.4-.4-3.5z"/></svg>
+        Continue with Google
+      </button>
+    </form>
+
+    <form id="signupForm" class="auth-form" onsubmit="return handleSignup(event)">
+      <div class="field"><label>Teacher Name</label><input type="text" id="signupName" placeholder="e.g. Mr. Okafor" required></div>
+      <div class="field"><label>School Name</label><input type="text" id="signupSchool" placeholder="e.g. God's Heritage Group of Schools" required></div>
+      <div class="field"><label>Email Address</label><input type="email" id="signupEmail" placeholder="you@school.com" required></div>
+      <div class="field"><label>Password</label><input type="password" id="signupPassword" placeholder="At least 6 characters" required></div>
+      <div class="field"><label>Confirm Password</label><input type="password" id="signupConfirm" placeholder="Re-enter password" required></div>
+      <button type="submit" class="btn-primary" id="signupBtn">Create Account</button>
+    </form>
+  </div>
+</div>
+
+<!-- ============================================================
+     MAIN APP
+     ============================================================ -->
+<div id="app">
+
+  <aside class="sidebar glass" id="sidebar">
+    <div class="sidebar-brand">
+      <div class="mark">GH</div>
+      <span class="label-text">God's Heritage<br>AI Assistant</span>
+    </div>
+
+    <button class="sidebar-btn primary" onclick="createNewChat()">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+      <span class="label-text">New Chat</span>
+    </button>
+
+    <div class="sidebar-search">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+      <input type="text" id="searchInput" placeholder="Search chats..." oninput="renderSidebarLists()">
+    </div>
+
+    <div class="sidebar-scroll">
+      <div>
+        <div class="section-title"><span class="label-text">Projects</span><button onclick="promptNewProject()" title="New project">+</button></div>
+        <div id="projectsList"></div>
+      </div>
+
+      <div>
+        <div class="section-title"><span class="label-text">Pinned</span></div>
+        <div id="pinnedList"></div>
+      </div>
+
+      <div>
+        <div class="section-title"><span class="label-text">Teaching Tools</span></div>
+        <div class="tools-grid" id="toolsList"></div>
+      </div>
+
+      <div id="historyContainer"></div>
+    </div>
+
+    <div class="sidebar-footer">
+      <div class="user-avatar" id="userAvatar">T</div>
+      <div class="user-meta">
+        <div class="uname" id="userNameLabel">Teacher</div>
+        <div class="uschool" id="userSchoolLabel">School</div>
+      </div>
+      <button class="collapse-toggle" onclick="toggleSidebarCollapse()" title="Collapse sidebar">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="4"></rect><line x1="10" y1="3" x2="10" y2="21"></line></svg>
+      </button>
+    </div>
+  </aside>
+
+  <div class="main-col">
+    <div class="topbar">
+      <div class="topbar-left">
+        <button class="icon-btn mobile-only" onclick="toggleMobileSidebar()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg>
+        </button>
+        <div class="topbar-brand">
+          <div class="school-logo">GH</div>
+          <span class="school-name">God's Heritage Group of Schools</span>
+        </div>
+      </div>
+      <div class="topbar-right">
+        <div class="model-pill" onclick="openSettings()"><span class="dot"></span><span id="modelLabel">Llama 3.3 70B</span></div>
+        <button class="icon-btn" onclick="openSettings()" title="Settings">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 11-2.83 2.83l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 11-2.83-2.83l.06-.06A1.65 1.65 0 004.6 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 112.83-2.83l.06.06A1.65 1.65 0 009 4.6a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 112.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"></path></svg>
+        </button>
+        <div class="user-avatar" id="userAvatarTop" style="width:34px;height:34px;font-size:.75rem;">T</div>
+      </div>
+    </div>
+
+    <!-- Welcome screen -->
+    <div class="welcome-screen" id="welcomeScreen">
+      <div class="welcome-illustration">
+        <div class="ring"></div>
+        <div class="ring2"></div>
+        <div class="core">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2l2.4 7.2H22l-6 4.4 2.3 7.2-6.3-4.5-6.3 4.5 2.3-7.2-6-4.4h7.6z"></path></svg>
+        </div>
+      </div>
+      <h1 class="welcome-heading">Welcome Back<strong id="welcomeName">Teacher</strong></h1>
+      <div class="suggestion-grid" id="suggestionGrid"></div>
+    </div>
+
+    <!-- Chat area -->
+    <div class="chat-scroll" id="chatScroll" style="display:none;">
+      <div class="chat-inner" id="chatInner"></div>
+    </div>
+
+    <!-- Input -->
+    <div class="input-zone">
+      <div class="input-wrap glass" id="inputWrap">
+        <textarea id="promptInput" rows="1" placeholder="Ask anything for your classroom..." oninput="onInputChange()" onkeydown="onInputKeydown(event)"></textarea>
+        <div class="input-toolbar">
+          <div class="input-toolbar-left">
+            <button class="icon-btn" title="Attach file" onclick="document.getElementById('fileInput').click()">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21.44 11.05l-9.19 9.19a6 6 0 01-8.49-8.49l9.19-9.19a4 4 0 015.66 5.66l-9.2 9.19a2 2 0 01-2.83-2.83l8.49-8.48"></path></svg>
+            </button>
+            <input type="file" id="fileInput" style="display:none" onchange="handleFileAttach(event)">
+            <button class="icon-btn" title="Voice input" onclick="toggleVoiceInput()" id="voiceBtn">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 1a3 3 0 00-3 3v8a3 3 0 006 0V4a3 3 0 00-3-3z"></path><path d="M19 10v2a7 7 0 01-14 0v-2M12 19v4M8 23h8"></path></svg>
+            </button>
+            <span class="char-count" id="charCount">0</span>
+          </div>
+          <button class="send-btn" id="sendBtn" onclick="sendMessage()">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>
+          </button>
+        </div>
+      </div>
+      <p class="input-hint">GHGS AI can make mistakes. Please review generated content before sharing with pupils.</p>
+    </div>
+  </div>
+</div>
+
+<!-- ============================================================
+     SETTINGS MODAL
+     ============================================================ -->
+<div class="modal-overlay" id="settingsModal">
+  <div class="modal-box glass" style="position:relative;">
+    <button class="modal-close icon-btn" onclick="closeSettings()">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+    </button>
+    <h2>Settings</h2>
+
+    <div class="settings-section">
+      <h3>Profile</h3>
+      <div class="field" style="margin-bottom:10px;"><label>Teacher Name</label><input type="text" id="settingsName" class="select-input"></div>
+      <div class="field"><label>School Name</label><input type="text" id="settingsSchool" class="select-input"></div>
+    </div>
+
+    <div class="settings-section">
+      <h3>Appearance</h3>
+      <div class="settings-row">
+        <span>Theme</span>
+        <div class="seg-control" id="themeControl">
+          <button data-val="light" onclick="setTheme('light')">Light</button>
+          <button data-val="dark" onclick="setTheme('dark')">Dark</button>
+        </div>
+      </div>
+      <div class="settings-row">
+        <span>Font Size</span>
+        <div class="seg-control" id="fontControl">
+          <button data-val="sm" onclick="setFontSize('sm')">Small</button>
+          <button data-val="md" onclick="setFontSize('md')">Medium</button>
+          <button data-val="lg" onclick="setFontSize('lg')">Large</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="settings-section">
+      <h3>AI Model</h3>
+      <select class="select-input" id="modelSelect" style="width:100%;" onchange="setModel(this.value)">
+        <option value="llama-3.3-70b-versatile">Llama 3.3 70B (Versatile)</option>
+        <option value="llama-3.1-8b-instant">Llama 3.1 8B (Instant)</option>
+        <option value="mixtral-8x7b-32768">Mixtral 8x7B</option>
+        <option value="gemma2-9b-it">Gemma 2 9B</option>
+      </select>
+    </div>
+
+    <div class="settings-section">
+      <h3>Data</h3>
+      <div class="settings-row">
+        <span>Export all chats</span>
+        <button class="link-btn" onclick="exportChats()">Export JSON</button>
+      </div>
+      <div class="settings-row">
+        <span>Delete all chats</span>
+        <button class="danger-btn" onclick="deleteAllChats()">Delete</button>
+      </div>
+    </div>
+
+    <button class="btn-primary" style="width:100%; margin-top:8px;" onclick="saveSettings()">Save Changes</button>
+    <button class="danger-btn" style="width:100%; margin-top:10px;" onclick="handleLogout()">Sign Out</button>
+  </div>
+</div>
+
+<script type="module">
+/* ============================================================
+   FIREBASE SETUP
+   ============================================================ */
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-app.js";
+import {
+  getAuth, onAuthStateChanged, setPersistence, browserLocalPersistence, browserSessionPersistence,
+  createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, sendPasswordResetEmail,
+  GoogleAuthProvider, signInWithPopup, updateProfile
+} from "https://www.gstatic.com/firebasejs/10.13.0/firebase-auth.js";
+import {
+  getFirestore, doc, setDoc, getDoc, updateDoc, collection, addDoc, deleteDoc,
+  onSnapshot, query, orderBy, serverTimestamp, writeBatch, getDocs
+} from "https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyCOVEtuSE3R3iPDXxbTqydtAHTtrzTSERc",
+  authDomain: "ghgs-ai.firebaseapp.com",
+  projectId: "ghgs-ai",
+  storageBucket: "ghgs-ai.firebasestorage.app",
+  messagingSenderId: "500736772758",
+  appId: "1:500736772758:web:ae2df7ec8fa4c4401c90b7",
+  measurementId: "G-XSTS9BJ9F8"
+};
+const fbApp = initializeApp(firebaseConfig);
+const auth = getAuth(fbApp);
+const db = getFirestore(fbApp);
+
+// The API function lives at /api/chat on the SAME domain as this page
+// (that's how Vercel serves both the site and the serverless function
+// together), so no separate backend URL or CORS setup is needed.
+const BACKEND_URL = '';
+
+/* ============================================================
+   STATE
+   ============================================================ */
+const state = {
+  user:null,
+  teacherName:'', schoolName:'',
+  conversations:[], projects:[],
+  activeConversationId:null,
+  settings:{ theme:'light', fontSize:'md', aiModel:'llama-3.3-70b-versatile' },
+  unsubs:[],
+  streaming:false
+};
+
+const TEACHING_TOOLS = [
+  { key:'lesson-notes', label:'Lesson Notes', icon:'book', prompt:'Write a detailed lesson note on the topic: [TOPIC] for [CLASS] on the subject [SUBJECT]. Include behavioural objectives, instructional materials, previous knowledge, introduction, step-by-step presentation, evaluation, and assignment.' },
+  { key:'question-gen', label:'Question Generator', icon:'help', prompt:'Generate 20 objective questions with 4 options (A–D) and correct answers on the topic: [TOPIC] for [CLASS] students.' },
+  { key:'exam-gen', label:'Examination Generator', icon:'file', prompt:'Create a full examination paper (Section A: 40 objective questions, Section B: 5 theory questions) on [SUBJECT] for [CLASS].' },
+  { key:'assignments', label:'Assignments', icon:'edit', prompt:'Create a homework assignment on [TOPIC] for [CLASS] with 10 questions and a marking guide.' },
+  { key:'comprehension', label:'Comprehension', icon:'layers', prompt:'Write a comprehension passage suitable for [CLASS] on the theme [THEME], followed by 8 comprehension questions.' },
+  { key:'dictation', label:'Dictation', icon:'mic', prompt:'Generate a dictation passage of 100 words suitable for [CLASS], along with a word list for practice.' },
+  { key:'spelling', label:'Spelling Tests', icon:'type', prompt:'Generate a spelling list of 20 words appropriate for [CLASS], grouped by difficulty level.' },
+  { key:'saved-prompts', label:'Saved Prompts', icon:'bookmark', prompt:null },
+  { key:'weekly-plan', label:'Weekly Lesson Plans', icon:'calendar', prompt:'Create a weekly lesson plan (Monday–Friday) for [SUBJECT], [CLASS], covering the topic [TOPIC].' },
+  { key:'scheme-of-work', label:'Scheme of Work', icon:'list', prompt:'Generate a full-term scheme of work for [SUBJECT], [CLASS], week by week.' },
+  { key:'marking-scheme', label:'Marking Scheme', icon:'check', prompt:'Create a detailed marking scheme/rubric for the following exam questions:\n[PASTE QUESTIONS HERE]' },
+];
+
+const WELCOME_SUGGESTIONS = [
+  { label:'Create Lesson Note', icon:'book', prompt:TEACHING_TOOLS[0].prompt },
+  { label:'Generate Examination', icon:'file', prompt:TEACHING_TOOLS[2].prompt },
+  { label:'Generate Assignment', icon:'edit', prompt:TEACHING_TOOLS[3].prompt },
+  { label:'Generate Comprehension', icon:'layers', prompt:TEACHING_TOOLS[4].prompt },
+  { label:'Generate Dictation', icon:'mic', prompt:TEACHING_TOOLS[5].prompt },
+  { label:'Generate Mathematics Questions', icon:'help', prompt:'Generate 15 mathematics questions with answers for [CLASS] on the topic [TOPIC].' },
+  { label:'Generate English Questions', icon:'help', prompt:'Generate 15 English Language questions with answers for [CLASS] on the topic [TOPIC].' },
+  { label:'Generate Civic Education Questions', icon:'help', prompt:'Generate 15 Civic Education questions with answers for [CLASS] on the topic [TOPIC].' },
+  { label:'Generate Yoruba Questions', icon:'help', prompt:'Generate 15 Yoruba Language questions with answers for [CLASS] on the topic [TOPIC].' },
+  { label:'Generate Science Questions', icon:'help', prompt:'Generate 15 Basic Science questions with answers for [CLASS] on the topic [TOPIC].' },
+  { label:'Generate Weekly Lesson Plan', icon:'calendar', prompt:TEACHING_TOOLS[8].prompt },
+  { label:'Generate Scheme of Work', icon:'list', prompt:TEACHING_TOOLS[9].prompt },
+  { label:'Generate Marking Scheme', icon:'check', prompt:TEACHING_TOOLS[10].prompt },
+];
+
+const ICONS = {
+  book:'<path d="M4 19.5A2.5 2.5 0 016.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z"/>',
+  help:'<circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 015.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/>',
+  file:'<path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/>',
+  edit:'<path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.12 2.12 0 013 3L12 15l-4 1 1-4z"/>',
+  layers:'<polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/>',
+  mic:'<path d="M12 1a3 3 0 00-3 3v8a3 3 0 006 0V4a3 3 0 00-3-3z"/><path d="M19 10v2a7 7 0 01-14 0v-2M12 19v4M8 23h8"/>',
+  type:'<polyline points="4 7 4 4 20 4 20 7"/><line x1="9" y1="20" x2="15" y2="20"/><line x1="12" y1="4" x2="12" y2="20"/>',
+  bookmark:'<path d="M19 21l-7-5-7 5V5a2 2 0 012-2h10a2 2 0 012 2z"/>',
+  calendar:'<rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/>',
+  list:'<line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/>',
+  check:'<polyline points="20 6 9 17 4 12"/>',
+};
+function svgIcon(name, size=15){ return `<svg viewBox="0 0 24 24" width="${size}" height="${size}" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${ICONS[name]||ICONS.book}</svg>`; }
+
+/* ============================================================
+   BACKGROUND PARTICLES
+   ============================================================ */
+(function spawnParticles(){
+  const wrap = document.getElementById('particles');
+  for(let i=0;i<24;i++){
+    const p = document.createElement('div');
+    p.className='particle';
+    p.style.left = Math.random()*100+'%';
+    p.style.bottom = '-10px';
+    p.style.animationDuration = (14+Math.random()*14)+'s';
+    p.style.animationDelay = (Math.random()*14)+'s';
+    p.style.width = p.style.height = (2+Math.random()*4)+'px';
+    wrap.appendChild(p);
+  }
+})();
+
+/* ============================================================
+   AUTH UI HELPERS
+   ============================================================ */
+window.switchAuthTab = function(tab){
+  document.querySelectorAll('.auth-tab').forEach(b=>b.classList.toggle('active', b.dataset.tab===tab));
+  document.getElementById('loginForm').classList.toggle('active', tab==='login');
+  document.getElementById('signupForm').classList.toggle('active', tab==='signup');
+  hideAuthMsg();
+};
+function showAuthMsg(text, type='error'){
+  const el = document.getElementById('authMsg');
+  el.textContent = text; el.className = `auth-msg show ${type}`;
+}
+function hideAuthMsg(){ document.getElementById('authMsg').classList.remove('show'); }
+
+function friendlyAuthError(err){
+  const code = err && err.code ? err.code : '';
+  const map = {
+    'auth/invalid-email':'That email address looks invalid.',
+    'auth/user-not-found':'No account found with that email.',
+    'auth/wrong-password':'Incorrect password. Please try again.',
+    'auth/invalid-credential':'Incorrect email or password.',
+    'auth/email-already-in-use':'An account already exists with that email.',
+    'auth/weak-password':'Password should be at least 6 characters.',
+    'auth/popup-closed-by-user':'Google sign-in was cancelled.',
+    'auth/network-request-failed':'Network error. Please check your connection.',
+  };
+  return map[code] || (err && err.message ? err.message.replace('Firebase: ','').replace(/\(auth.*\)/,'') : 'Something went wrong. Please try again.');
+}
+
+window.handleLogin = async function(e){
+  e.preventDefault();
+  hideAuthMsg();
+  const name = document.getElementById('loginName').value.trim();
+  const email = document.getElementById('loginEmail').value.trim();
+  const password = document.getElementById('loginPassword').value;
+  const remember = document.getElementById('rememberMe').checked;
+  const btn = document.getElementById('loginBtn');
+  btn.disabled = true; btn.textContent = 'Signing in...';
+  try{
+    await setPersistence(auth, remember ? browserLocalPersistence : browserSessionPersistence);
+    const cred = await signInWithEmailAndPassword(auth, email, password);
+    if(name){
+      const ref = doc(db, 'users', cred.user.uid);
+      const snap = await getDoc(ref);
+      if(!snap.exists() || !snap.data().teacherName){
+        await setDoc(ref, { teacherName:name }, { merge:true });
+      }
+    }
+  }catch(err){
+    showAuthMsg(friendlyAuthError(err));
+  }finally{
+    btn.disabled = false; btn.textContent = 'Sign In';
+  }
+  return false;
+};
+
+window.handleSignup = async function(e){
+  e.preventDefault();
+  hideAuthMsg();
+  const name = document.getElementById('signupName').value.trim();
+  const school = document.getElementById('signupSchool').value.trim();
+  const email = document.getElementById('signupEmail').value.trim();
+  const password = document.getElementById('signupPassword').value;
+  const confirm = document.getElementById('signupConfirm').value;
+  const btn = document.getElementById('signupBtn');
+
+  if(password !== confirm){ showAuthMsg('Passwords do not match.'); return false; }
+  if(password.length < 6){ showAuthMsg('Password should be at least 6 characters.'); return false; }
+
+  btn.disabled = true; btn.textContent = 'Creating account...';
+  try{
+    await setPersistence(auth, browserLocalPersistence);
+    const cred = await createUserWithEmailAndPassword(auth, email, password);
+    await updateProfile(cred.user, { displayName:name });
+    await setDoc(doc(db,'users',cred.user.uid), {
+      teacherName:name, schoolName:school, email,
+      theme:'light', fontSize:'md', aiModel:'llama-3.3-70b-versatile',
+      createdAt:serverTimestamp()
+    }, { merge:true });
+  }catch(err){
+    showAuthMsg(friendlyAuthError(err));
+  }finally{
+    btn.disabled = false; btn.textContent = 'Create Account';
+  }
+  return false;
+};
+
+window.handleGoogleSignIn = async function(){
+  hideAuthMsg();
+  try{
+    await setPersistence(auth, browserLocalPersistence);
+    const provider = new GoogleAuthProvider();
+    const cred = await signInWithPopup(auth, provider);
+    const ref = doc(db,'users',cred.user.uid);
+    const snap = await getDoc(ref);
+    if(!snap.exists()){
+      await setDoc(ref, {
+        teacherName:cred.user.displayName || 'Teacher',
+        schoolName:"God's Heritage Group of Schools",
+        email:cred.user.email,
+        theme:'light', fontSize:'md', aiModel:'llama-3.3-70b-versatile',
+        createdAt:serverTimestamp()
+      }, { merge:true });
+    }
+  }catch(err){
+    showAuthMsg(friendlyAuthError(err));
+  }
+};
+
+window.handleForgotPassword = async function(){
+  const email = document.getElementById('loginEmail').value.trim();
+  if(!email){ showAuthMsg('Enter your email above first, then click "Forgot password?" again.'); return; }
+  try{
+    await sendPasswordResetEmail(auth, email);
+    showAuthMsg('Password reset email sent. Check your inbox.', 'success');
+  }catch(err){
+    showAuthMsg(friendlyAuthError(err));
+  }
+};
+
+window.handleLogout = async function(){
+  cleanupSubscriptions();
+  await signOut(auth);
+  closeSettings();
+};
+
+/* ============================================================
+   AUTH STATE
+   ============================================================ */
+onAuthStateChanged(auth, async (user)=>{
+  if(user){
+    state.user = user;
+    document.getElementById('authScreen').classList.add('hidden');
+    document.getElementById('app').classList.add('visible');
+    await bootstrapUserData(user.uid);
+  }else{
+    state.user = null;
+    cleanupSubscriptions();
+    document.getElementById('authScreen').classList.remove('hidden');
+    document.getElementById('app').classList.remove('visible');
+  }
+});
+
+function cleanupSubscriptions(){
+  state.unsubs.forEach(fn=>{ try{ fn(); }catch(_){} });
+  state.unsubs = [];
+  state.conversations = []; state.projects = [];
+  state.activeConversationId = null;
+}
+
+async function bootstrapUserData(uid){
+  const userRef = doc(db,'users',uid);
+  const snap = await getDoc(userRef);
+  if(!snap.exists()){
+    await setDoc(userRef, {
+      teacherName: state.user.displayName || 'Teacher',
+      schoolName: "God's Heritage Group of Schools",
+      theme:'light', fontSize:'md', aiModel:'llama-3.3-70b-versatile',
+      createdAt: serverTimestamp()
+    }, { merge:true });
+  }
+
+  const unsubUser = onSnapshot(userRef, (docSnap)=>{
+    const data = docSnap.data() || {};
+    state.teacherName = data.teacherName || 'Teacher';
+    state.schoolName = data.schoolName || "God's Heritage Group of Schools";
+    state.settings.theme = data.theme || 'light';
+    state.settings.fontSize = data.fontSize || 'md';
+    state.settings.aiModel = data.aiModel || 'llama-3.3-70b-versatile';
+    applyTheme(state.settings.theme, false);
+    applyFontSize(state.settings.fontSize, false);
+    updateProfileUI();
+  });
+  state.unsubs.push(unsubUser);
+
+  const projQuery = query(collection(db,'users',uid,'projects'), orderBy('createdAt','asc'));
+  const unsubProj = onSnapshot(projQuery, (qs)=>{
+    state.projects = qs.docs.map(d=>({ id:d.id, ...d.data() }));
+    renderSidebarLists();
+  });
+  state.unsubs.push(unsubProj);
+
+  const convQuery = query(collection(db,'users',uid,'conversations'), orderBy('updatedAt','desc'));
+  const unsubConv = onSnapshot(convQuery, (qs)=>{
+    state.conversations = qs.docs.map(d=>({ id:d.id, ...d.data() }));
+    renderSidebarLists();
+    if(state.activeConversationId){
+      const active = state.conversations.find(c=>c.id===state.activeConversationId);
+      if(active) renderMessages(active);
+    }
+  });
+  state.unsubs.push(unsubConv);
+
+  renderToolsList();
+  renderSuggestionGrid();
+}
+
+function updateProfileUI(){
+  const initials = (state.teacherName||'T').trim().charAt(0).toUpperCase();
+  document.getElementById('userAvatar').textContent = initials;
+  document.getElementById('userAvatarTop').textContent = initials;
+  document.getElementById('userNameLabel').textContent = state.teacherName;
+  document.getElementById('userSchoolLabel').textContent = state.schoolName;
+  document.getElementById('welcomeName').textContent = state.teacherName;
+  document.getElementById('settingsName').value = state.teacherName;
+  document.getElementById('settingsSchool').value = state.schoolName;
+  document.getElementById('modelSelect').value = state.settings.aiModel;
+  document.getElementById('modelLabel').textContent = modelDisplayName(state.settings.aiModel);
+  updateThemeControl(); updateFontControl();
+}
+function modelDisplayName(m){
+  const names = { 'llama-3.3-70b-versatile':'Llama 3.3 70B', 'llama-3.1-8b-instant':'Llama 3.1 8B', 'mixtral-8x7b-32768':'Mixtral 8x7B', 'gemma2-9b-it':'Gemma 2 9B' };
+  return names[m] || m;
+}
+
+/* ============================================================
+   SIDEBAR RENDERING
+   ============================================================ */
+function renderToolsList(){
+  const el = document.getElementById('toolsList');
+  el.innerHTML = TEACHING_TOOLS.map(t=>`
+    <div class="tool-item" onclick="useTool('${t.key}')">
+      <div class="ticon">${svgIcon(t.icon,14)}</div>
+      <span class="label-text">${t.label}</span>
+    </div>`).join('');
+}
+
+function renderSuggestionGrid(){
+  const el = document.getElementById('suggestionGrid');
+  el.innerHTML = WELCOME_SUGGESTIONS.map((s,i)=>`
+    <div class="suggestion-card glass" style="animation-delay:${i*0.05}s" onclick="useSuggestion(${i})">
+      <div class="sicon">${svgIcon(s.icon,16)}</div>
+      <p>${s.label}</p>
+      <span>Tap to start drafting</span>
+    </div>`).join('');
+}
+
+window.useTool = function(key){
+  const tool = TEACHING_TOOLS.find(t=>t.key===key);
+  if(!tool) return;
+  if(tool.key==='saved-prompts'){ openSavedPrompts(); return; }
+  const input = document.getElementById('promptInput');
+  input.value = tool.prompt;
+  onInputChange();
+  input.focus();
+  if(window.innerWidth <= 880) toggleMobileSidebar(false);
+};
+window.useSuggestion = function(idx){
+  const s = WELCOME_SUGGESTIONS[idx];
+  const input = document.getElementById('promptInput');
+  input.value = s.prompt;
+  onInputChange();
+  input.focus();
+};
+function openSavedPrompts(){
+  alert('Your saved prompts will appear here. Save a prompt from any chat using the bookmark action (coming from your message actions) to build this list.');
+}
+
+function groupConversationsByDate(list){
+  const now = new Date();
+  const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  const groups = { Today:[], Yesterday:[], 'Previous 7 Days':[], 'Previous Month':[], Older:[] };
+  list.forEach(c=>{
+    const t = c.updatedAt && c.updatedAt.toDate ? c.updatedAt.toDate() : new Date();
+    const diffDays = Math.floor((startOfToday - new Date(t.getFullYear(),t.getMonth(),t.getDate())) / 86400000);
+    if(diffDays<=0) groups.Today.push(c);
+    else if(diffDays===1) groups.Yesterday.push(c);
+    else if(diffDays<=7) groups['Previous 7 Days'].push(c);
+    else if(diffDays<=30) groups['Previous Month'].push(c);
+    else groups.Older.push(c);
+  });
+  return groups;
+}
+
+function renderSidebarLists(){
+  const searchTerm = (document.getElementById('searchInput').value || '').toLowerCase();
+  const filtered = state.conversations.filter(c=> (c.title||'New chat').toLowerCase().includes(searchTerm));
+
+  // Projects
+  const projEl = document.getElementById('projectsList');
+  projEl.innerHTML = state.projects.map(p=>`
+    <div class="proj-item" onclick="createNewChat('${p.id}')" title="New chat in ${escapeHtml(p.name)}">
+      ${svgIcon('list',14)}<span class="label-text">${escapeHtml(p.name)}</span>
+    </div>`).join('') || `<div class="proj-item" style="color:var(--muted-soft)"><span class="label-text">No projects yet</span></div>`;
+
+  // Pinned
+  const pinned = filtered.filter(c=>c.pinned);
+  const pinnedEl = document.getElementById('pinnedList');
+  pinnedEl.innerHTML = pinned.map(c=>convItemHtml(c)).join('') || `<div class="conv-item" style="color:var(--muted-soft)"><span class="label-text">No pinned chats</span></div>`;
+
+  // History grouped
+  const unpinned = filtered.filter(c=>!c.pinned);
+  const groups = groupConversationsByDate(unpinned);
+  const historyEl = document.getElementById('historyContainer');
+  let html = '';
+  Object.entries(groups).forEach(([label, items])=>{
+    if(items.length===0) return;
+    html += `<div><div class="section-title"><span class="label-text">${label}</span></div>${items.map(c=>convItemHtml(c)).join('')}</div>`;
+  });
+  historyEl.innerHTML = html;
+}
+
+function convItemHtml(c){
+  const title = escapeHtml(c.title || 'New chat');
+  const active = c.id===state.activeConversationId ? 'active' : '';
+  return `
+    <div class="conv-item ${active}" onclick="selectConversation('${c.id}')">
+      <span>${title}</span>
+      <div class="conv-actions">
+        <button onclick="event.stopPropagation(); togglePin('${c.id}', ${!!c.pinned})" title="${c.pinned?'Unpin':'Pin'}">
+          <svg class="${c.pinned?'pin-icon':''}" viewBox="0 0 24 24" fill="${c.pinned?'currentColor':'none'}" stroke="currentColor" stroke-width="2"><path d="M12 2l1.5 5.5L19 9l-4 3.5L16 18l-4-2.5L8 18l1-5.5L5 9l5.5-1.5z"></path></svg>
+        </button>
+        <button onclick="event.stopPropagation(); renameConversation('${c.id}')" title="Rename">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"></path><path d="M18.5 2.5a2.12 2.12 0 013 3L12 15l-4 1 1-4z"></path></svg>
+        </button>
+        <button onclick="event.stopPropagation(); deleteConversation('${c.id}')" title="Delete">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"></path></svg>
+        </button>
+      </div>
+    </div>`;
+}
+function escapeHtml(str){
+  const d = document.createElement('div'); d.textContent = str||''; return d.innerHTML;
+}
+
+/* ============================================================
+   PROJECTS
+   ============================================================ */
+window.promptNewProject = async function(){
+  const name = prompt('Name this project (e.g. "Basic 5 Mathematics"):');
+  if(!name || !name.trim()) return;
+  await addDoc(collection(db,'users',state.user.uid,'projects'), { name:name.trim(), createdAt:serverTimestamp() });
+};
+
+/* ============================================================
+   CONVERSATIONS
+   ============================================================ */
+window.createNewChat = async function(projectId=null){
+  const ref = await addDoc(collection(db,'users',state.user.uid,'conversations'), {
+    title:'New chat', projectId:projectId||null, pinned:false,
+    messages:[], createdAt:serverTimestamp(), updatedAt:serverTimestamp()
+  });
+  selectConversation(ref.id);
+  if(window.innerWidth <= 880) toggleMobileSidebar(false);
+};
+
+window.selectConversation = function(id){
+  state.activeConversationId = id;
+  renderSidebarLists();
+  const conv = state.conversations.find(c=>c.id===id);
+  document.getElementById('welcomeScreen').style.display = 'none';
+  document.getElementById('chatScroll').style.display = 'block';
+  renderMessages(conv);
+};
+
+window.togglePin = async function(id, current){
+  await updateDoc(doc(db,'users',state.user.uid,'conversations',id), { pinned:!current });
+};
+
+window.renameConversation = async function(id){
+  const conv = state.conversations.find(c=>c.id===id);
+  const name = prompt('Rename conversation:', conv ? conv.title : '');
+  if(!name || !name.trim()) return;
+  await updateDoc(doc(db,'users',state.user.uid,'conversations',id), { title:name.trim() });
+};
+
+window.deleteConversation = async function(id){
+  if(!confirm('Delete this conversation? This cannot be undone.')) return;
+  await deleteDoc(doc(db,'users',state.user.uid,'conversations',id));
+  if(state.activeConversationId === id){
+    state.activeConversationId = null;
+    document.getElementById('chatScroll').style.display = 'none';
+    document.getElementById('welcomeScreen').style.display = 'flex';
+  }
+};
+
+window.deleteAllChats = async function(){
+  if(!confirm('Delete ALL your conversations? This cannot be undone.')) return;
+  const batch = writeBatch(db);
+  state.conversations.forEach(c=> batch.delete(doc(db,'users',state.user.uid,'conversations',c.id)));
+  await batch.commit();
+  state.activeConversationId = null;
+  document.getElementById('chatScroll').style.display = 'none';
+  document.getElementById('welcomeScreen').style.display = 'flex';
+};
+
+window.exportChats = function(){
+  const data = JSON.stringify(state.conversations, null, 2);
+  const blob = new Blob([data], { type:'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = 'ghgs-ai-chats-export.json';
+  a.click();
+  URL.revokeObjectURL(url);
+};
+
+/* ============================================================
+   MESSAGE RENDERING
+   ============================================================ */
+function renderMessages(conv){
+  const inner = document.getElementById('chatInner');
+  if(!conv){ inner.innerHTML=''; return; }
+  const msgs = conv.messages || [];
+  inner.innerHTML = msgs.map((m,i)=>messageHtml(m,i)).join('');
+  const scrollEl = document.getElementById('chatScroll');
+  scrollEl.scrollTop = scrollEl.scrollHeight;
+}
+
+function messageHtml(m, idx){
+  const initials = m.role==='user' ? (state.teacherName||'T').charAt(0).toUpperCase() : 'AI';
+  const bodyHtml = m.role==='assistant' ? renderMarkdown(m.content||'') : escapeHtml(m.content||'').replace(/\n/g,'<br>');
+  const actions = m.role==='assistant' ? `
+    <div class="msg-actions">
+      <button title="Copy" onclick="copyMessage(${idx})">${svgIcon('list',14)}</button>
+      <button title="Regenerate" onclick="regenerateResponse(${idx})">${svgIcon('book',14)}</button>
+      <button title="Like" class="${m.liked?'liked':''}" onclick="reactMessage(${idx},'liked')">${svgIcon('check',14)}</button>
+      <button title="Dislike" class="${m.disliked?'disliked':''}" onclick="reactMessage(${idx},'disliked')">${svgIcon('help',14)}</button>
+    </div>` : '';
+  return `
+    <div class="msg ${m.role}" data-idx="${idx}">
+      <div class="msg-avatar">${initials}</div>
+      <div class="msg-body">
+        <div class="bubble">${bodyHtml}</div>
+        ${actions}
+      </div>
+    </div>`;
+}
+
+/* Minimal, dependency-free markdown renderer (bold/italic/code/lists/tables/headers) */
+function renderMarkdown(src){
+  let text = escapeHtml(src);
+  // fenced code blocks
+  text = text.replace(/```([a-zA-Z]*)\n([\s\S]*?)```/g, (_, lang, code)=>`<pre><code>${code}</code></pre>`);
+  // tables
+  text = text.replace(/((?:^\|.*\|\s*$\n?)+)/gm, (block)=>{
+    const rows = block.trim().split('\n').filter(r=>r.trim());
+    if(rows.length<2) return block;
+    const cells = rows.map(r=> r.trim().replace(/^\||\|$/g,'').split('|').map(c=>c.trim()));
+    const header = cells[0]; const body = cells.slice(2);
+    if(!/^:?-+:?$/.test((cells[1]||[])[0]||'')) return block;
+    let out = '<table><thead><tr>' + header.map(h=>`<th>${h}</th>`).join('') + '</tr></thead><tbody>';
+    body.forEach(r=>{ out += '<tr>' + r.map(c=>`<td>${c}</td>`).join('') + '</tr>'; });
+    out += '</tbody></table>';
+    return out;
+  });
+  // headers
+  text = text.replace(/^### (.*)$/gm,'<h3>$1</h3>').replace(/^## (.*)$/gm,'<h2>$1</h2>').replace(/^# (.*)$/gm,'<h1>$1</h1>');
+  // bold / italic / inline code
+  text = text.replace(/\*\*(.+?)\*\*/g,'<strong>$1</strong>').replace(/\*(.+?)\*/g,'<em>$1</em>').replace(/`([^`]+?)`/g,'<code>$1</code>');
+  // unordered lists
+  text = text.replace(/(^|\n)((?:[-*] .*\n?)+)/g, (m,pre,block)=>{
+    const items = block.trim().split('\n').map(l=>`<li>${l.replace(/^[-*]\s+/,'')}</li>`).join('');
+    return `${pre}<ul>${items}</ul>`;
+  });
+  // ordered lists
+  text = text.replace(/(^|\n)((?:\d+\. .*\n?)+)/g, (m,pre,block)=>{
+    const items = block.trim().split('\n').map(l=>`<li>${l.replace(/^\d+\.\s+/,'')}</li>`).join('');
+    return `${pre}<ol>${items}</ol>`;
+  });
+  // paragraphs (double newline)
+  text = text.split(/\n{2,}/).map(p=> /^<(h1|h2|h3|ul|ol|pre|table)/.test(p.trim()) ? p : `<p>${p.replace(/\n/g,'<br>')}</p>`).join('');
+  return text;
+}
+
+window.copyMessage = function(idx){
+  const conv = state.conversations.find(c=>c.id===state.activeConversationId);
+  if(!conv) return;
+  const msg = conv.messages[idx];
+  navigator.clipboard.writeText(msg.content||'');
+};
+
+window.reactMessage = async function(idx, field){
+  const conv = state.conversations.find(c=>c.id===state.activeConversationId);
+  if(!conv) return;
+  const messages = [...conv.messages];
+  const other = field==='liked' ? 'disliked' : 'liked';
+  messages[idx] = { ...messages[idx], [field]: !messages[idx][field], [other]: false };
+  await updateDoc(doc(db,'users',state.user.uid,'conversations',conv.id), { messages });
+};
+
+window.regenerateResponse = async function(idx){
+  const conv = state.conversations.find(c=>c.id===state.activeConversationId);
+  if(!conv || state.streaming) return;
+  const history = conv.messages.slice(0, idx);
+  await streamAssistantReply(conv, history, idx);
+};
+
+/* ============================================================
+   INPUT HANDLING
+   ============================================================ */
+window.onInputChange = function(){
+  const el = document.getElementById('promptInput');
+  el.style.height = 'auto';
+  el.style.height = Math.min(el.scrollHeight, 160) + 'px';
+  document.getElementById('charCount').textContent = el.value.length;
+  document.getElementById('sendBtn').classList.toggle('ready', el.value.trim().length>0);
+};
+window.onInputKeydown = function(e){
+  if(e.key==='Enter' && !e.shiftKey){
+    e.preventDefault();
+    sendMessage();
+  }
+};
+window.handleFileAttach = function(e){
+  const file = e.target.files[0];
+  if(!file) return;
+  const input = document.getElementById('promptInput');
+  input.value += (input.value?'\n':'') + `[Attached file: ${file.name}]`;
+  onInputChange();
+};
+let recognizing = false, recognition = null;
+window.toggleVoiceInput = function(){
+  const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+  if(!SR){ alert('Voice input is not supported in this browser.'); return; }
+  const btn = document.getElementById('voiceBtn');
+  if(recognizing){ recognition.stop(); return; }
+  recognition = new SR();
+  recognition.lang = 'en-US';
+  recognition.onresult = (e)=>{
+    const transcript = Array.from(e.results).map(r=>r[0].transcript).join('');
+    document.getElementById('promptInput').value = transcript;
+    onInputChange();
+  };
+  recognition.onend = ()=>{ recognizing=false; btn.style.color=''; };
+  recognition.start();
+  recognizing = true; btn.style.color = 'var(--violet)';
+};
+
+/* ============================================================
+   SENDING MESSAGES / STREAMING
+   ============================================================ */
+window.sendMessage = async function(){
+  const input = document.getElementById('promptInput');
+  const text = input.value.trim();
+  if(!text || state.streaming) return;
+
+  let conv = state.conversations.find(c=>c.id===state.activeConversationId);
+  if(!conv){
+    const ref = await addDoc(collection(db,'users',state.user.uid,'conversations'), {
+      title:text.slice(0,48), projectId:null, pinned:false, messages:[], createdAt:serverTimestamp(), updatedAt:serverTimestamp()
+    });
+    state.activeConversationId = ref.id;
+    conv = { id:ref.id, title:text.slice(0,48), messages:[] };
+    document.getElementById('welcomeScreen').style.display = 'none';
+    document.getElementById('chatScroll').style.display = 'block';
+  }
+
+  input.value = ''; onInputChange();
+
+  const newMessages = [...(conv.messages||[]), { role:'user', content:text, ts:Date.now() }];
+  const isFirstMessage = (conv.messages||[]).length===0;
+  await updateDoc(doc(db,'users',state.user.uid,'conversations',conv.id), {
+    messages:newMessages, updatedAt:serverTimestamp(),
+    ...(isFirstMessage ? { title:text.slice(0,48) } : {})
+  });
+
+  await streamAssistantReply({ ...conv, messages:newMessages }, newMessages, newMessages.length);
+};
+
+async function streamAssistantReply(conv, historyMessages, insertAtIndex){
+  state.streaming = true;
+  document.getElementById('sendBtn').classList.remove('ready');
+
+  const inner = document.getElementById('chatInner');
+  const thinkingId = 'thinking-'+Date.now();
+  inner.insertAdjacentHTML('beforeend', `
+    <div class="msg assistant" id="${thinkingId}">
+      <div class="msg-avatar">AI</div>
+      <div class="msg-body"><div class="bubble"><div class="thinking-dots"><span></span><span></span><span></span></div></div></div>
+    </div>`);
+  document.getElementById('chatScroll').scrollTop = document.getElementById('chatScroll').scrollHeight;
+
+  const payloadMessages = historyMessages.map(m=>({ role:m.role, content:m.content }));
+  payloadMessages.unshift({ role:'system', content:`You are the AI Teaching Assistant for God's Heritage Group of Schools, helping ${state.teacherName||'a teacher'} prepare lesson notes, exams, assignments and classroom materials for Nigerian primary and secondary school pupils. Be clear, well-structured, and practical. Use markdown formatting (headings, lists, tables) where helpful.` });
+
+  let fullText = '';
+  try{
+    const res = await fetch(`${BACKEND_URL}/api/chat`, {
+      method:'POST',
+      headers:{ 'Content-Type':'application/json' },
+      body: JSON.stringify({ messages:payloadMessages, model:state.settings.aiModel, stream:true })
+    });
+
+    if(!res.ok || !res.body){
+      throw new Error('Backend request failed ('+res.status+'). Is the backend server running?');
+    }
+
+    const thinkingEl = document.getElementById(thinkingId);
+    thinkingEl.querySelector('.bubble').innerHTML = '<span class="live-text"></span><span class="stream-cursor"></span>';
+    const liveEl = thinkingEl.querySelector('.live-text');
+
+    const reader = res.body.getReader();
+    const decoder = new TextDecoder();
+    let buffer = '';
+    while(true){
+      const { done, value } = await reader.read();
+      if(done) break;
+      buffer += decoder.decode(value, { stream:true });
+      const lines = buffer.split('\n');
+      buffer = lines.pop();
+      for(const line of lines){
+        const trimmed = line.trim();
+        if(!trimmed.startsWith('data:')) continue;
+        const payload = trimmed.slice(5).trim();
+        if(payload === '[DONE]') continue;
+        try{
+          const json = JSON.parse(payload);
+          const delta = json.choices && json.choices[0] && json.choices[0].delta ? json.choices[0].delta.content : '';
+          if(delta){
+            fullText += delta;
+            liveEl.innerHTML = renderMarkdown(fullText);
+            document.getElementById('chatScroll').scrollTop = document.getElementById('chatScroll').scrollHeight;
+          }
+        }catch(_){ /* ignore parse errors on partial chunks */ }
+      }
+    }
+  }catch(err){
+    fullText = fullText || `⚠️ I couldn't reach the AI service. ${err.message}\n\nMake sure your backend server is running and reachable at ${BACKEND_URL}.`;
+  }finally{
+    document.getElementById(thinkingId)?.remove();
+    const finalMessages = [...historyMessages];
+    finalMessages[insertAtIndex] = { role:'assistant', content:fullText, ts:Date.now() };
+    await updateDoc(doc(db,'users',state.user.uid,'conversations',conv.id), { messages:finalMessages, updatedAt:serverTimestamp() });
+    state.streaming = false;
+  }
+}
+
+/* ============================================================
+   SETTINGS
+   ============================================================ */
+window.openSettings = function(){ document.getElementById('settingsModal').classList.add('show'); };
+window.closeSettings = function(){ document.getElementById('settingsModal').classList.remove('show'); };
+
+function updateThemeControl(){
+  document.querySelectorAll('#themeControl button').forEach(b=> b.classList.toggle('active', b.dataset.val===state.settings.theme));
+}
+function updateFontControl(){
+  document.querySelectorAll('#fontControl button').forEach(b=> b.classList.toggle('active', b.dataset.val===state.settings.fontSize));
+}
+
+window.setTheme = function(theme){ state.settings.theme = theme; applyTheme(theme); updateThemeControl(); };
+window.setFontSize = function(size){ state.settings.fontSize = size; applyFontSize(size); updateFontControl(); };
+window.setModel = function(model){ state.settings.aiModel = model; document.getElementById('modelLabel').textContent = modelDisplayName(model); };
+
+function applyTheme(theme, mirrorToControl=true){
+  document.body.setAttribute('data-theme', theme);
+  if(mirrorToControl) updateThemeControl();
+}
+function applyFontSize(size, mirrorToControl=true){
+  const scale = { sm:0.9, md:1, lg:1.12 }[size] || 1;
+  document.documentElement.style.setProperty('--fs-scale', scale);
+  if(mirrorToControl) updateFontControl();
+}
+
+window.saveSettings = async function(){
+  const name = document.getElementById('settingsName').value.trim();
+  const school = document.getElementById('settingsSchool').value.trim();
+  await updateDoc(doc(db,'users',state.user.uid), {
+    teacherName:name, schoolName:school,
+    theme:state.settings.theme, fontSize:state.settings.fontSize, aiModel:state.settings.aiModel
+  });
+  closeSettings();
+};
+
+/* ============================================================
+   SIDEBAR TOGGLES
+   ============================================================ */
+window.toggleSidebarCollapse = function(){
+  document.getElementById('sidebar').classList.toggle('collapsed');
+};
+window.toggleMobileSidebar = function(force){
+  const sb = document.getElementById('sidebar');
+  if(force===false){ sb.classList.remove('mobile-open'); return; }
+  sb.classList.toggle('mobile-open');
+};
+
+</script>
+</body>
+</html>
