@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -585,8 +584,24 @@ a{ color:var(--violet); }
 </div>
 
 <!-- ============================================================
-     MAIN APP
+     EMAIL VERIFICATION GATE
      ============================================================ -->
+<div id="verifyScreen" class="auth-screen hidden">
+  <div class="auth-card glass" style="text-align:center;">
+    <div class="auth-brand">
+      <div class="brand-mark">GH</div>
+      <p class="brand-name">God's Heritage Group of Schools</p>
+      <h1 class="auth-title" style="font-size:1.4rem;">Confirm your email</h1>
+    </div>
+    <p style="font-size:.88rem; color:var(--muted); margin-bottom:18px; line-height:1.6;">
+      We sent a confirmation link to <strong id="verifyEmailLabel" style="color:var(--ink);"></strong>.
+      Open that email and click the link, then come back here.
+    </p>
+    <button class="btn-primary" id="checkVerifyBtn" onclick="checkVerification()" style="width:100%; margin-bottom:12px;">I've verified — Continue</button>
+    <button class="btn-google" id="resendVerifyBtn" onclick="resendVerificationEmail()" style="width:100%; margin-bottom:12px;">Resend verification email</button>
+    <button class="link-btn" onclick="verifyScreenLogout()" style="font-size:.82rem;">Sign out</button>
+  </div>
+</div>
 <div id="app">
 
   <aside class="sidebar glass" id="sidebar">
@@ -769,7 +784,7 @@ import { initializeApp } from "https://www.gstatic.com/firebasejs/10.13.0/fireba
 import {
   getAuth, onAuthStateChanged, setPersistence, browserLocalPersistence, browserSessionPersistence,
   createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, sendPasswordResetEmail,
-  GoogleAuthProvider, signInWithPopup, updateProfile
+  GoogleAuthProvider, signInWithPopup, updateProfile, sendEmailVerification
 } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-auth.js";
 import {
   getFirestore, doc, setDoc, getDoc, updateDoc, collection, addDoc, deleteDoc,
@@ -789,10 +804,10 @@ const fbApp = initializeApp(firebaseConfig);
 const auth = getAuth(fbApp);
 const db = getFirestore(fbApp);
 
-// The API function lives at /api/chat on the SAME domain as this page
-// (that's how Vercel serves both the site and the serverless function
-// together), so no separate backend URL or CORS setup is needed.
-const BACKEND_URL = '';
+// This points at your backend running on Railway. After you deploy the
+// backend folder to Railway, copy the URL Railway gives you (Settings →
+// Networking → Generate Domain) and paste it here, replacing the text below.
+const BACKEND_URL = 'https://YOUR-APP-NAME.up.railway.app';
 
 /* ============================================================
    STATE
@@ -944,6 +959,7 @@ window.handleSignup = async function(e){
     await setPersistence(auth, browserLocalPersistence);
     const cred = await createUserWithEmailAndPassword(auth, email, password);
     await updateProfile(cred.user, { displayName:name });
+    await sendEmailVerification(cred.user);
     await setDoc(doc(db,'users',cred.user.uid), {
       teacherName:name, schoolName:school, email,
       theme:'light', fontSize:'md', aiModel:'llama-3.3-70b-versatile',
@@ -1001,17 +1017,61 @@ window.handleLogout = async function(){
    ============================================================ */
 onAuthStateChanged(auth, async (user)=>{
   if(user){
-    state.user = user;
+    await user.reload().catch(()=>{});
+    const freshUser = auth.currentUser;
+    const isGoogleUser = freshUser.providerData.some(p=>p.providerId==='google.com');
+
+    if(!freshUser.emailVerified && !isGoogleUser){
+      state.user = freshUser;
+      document.getElementById('authScreen').classList.add('hidden');
+      document.getElementById('app').classList.remove('visible');
+      document.getElementById('verifyScreen').classList.remove('hidden');
+      document.getElementById('verifyEmailLabel').textContent = freshUser.email;
+      return;
+    }
+
+    document.getElementById('verifyScreen').classList.add('hidden');
+    state.user = freshUser;
     document.getElementById('authScreen').classList.add('hidden');
     document.getElementById('app').classList.add('visible');
-    await bootstrapUserData(user.uid);
+    await bootstrapUserData(freshUser.uid);
   }else{
     state.user = null;
     cleanupSubscriptions();
+    document.getElementById('verifyScreen').classList.add('hidden');
     document.getElementById('authScreen').classList.remove('hidden');
     document.getElementById('app').classList.remove('visible');
   }
 });
+
+window.resendVerificationEmail = async function(){
+  if(!auth.currentUser) return;
+  const btn = document.getElementById('resendVerifyBtn');
+  btn.disabled = true; btn.textContent = 'Sending...';
+  try{
+    await sendEmailVerification(auth.currentUser);
+    btn.textContent = 'Email sent!';
+  }catch(err){
+    btn.textContent = 'Could not send — try again shortly';
+  }
+  setTimeout(()=>{ btn.disabled=false; btn.textContent='Resend verification email'; }, 20000);
+};
+
+window.checkVerification = async function(){
+  const btn = document.getElementById('checkVerifyBtn');
+  btn.disabled = true; btn.textContent = 'Checking...';
+  await auth.currentUser.reload();
+  if(auth.currentUser.emailVerified){
+    location.reload();
+  }else{
+    btn.disabled = false; btn.textContent = "I've verified — Continue";
+    alert('Still not verified yet. Please check your inbox (and spam folder), click the confirmation link, then try again.');
+  }
+};
+
+window.verifyScreenLogout = async function(){
+  await signOut(auth);
+};
 
 function cleanupSubscriptions(){
   state.unsubs.forEach(fn=>{ try{ fn(); }catch(_){} });
@@ -1056,7 +1116,7 @@ async function bootstrapUserData(uid){
   const unsubConv = onSnapshot(convQuery, (qs)=>{
     state.conversations = qs.docs.map(d=>({ id:d.id, ...d.data() }));
     renderSidebarLists();
-    if(state.activeConversationId){
+    if(state.activeConversationId && !state.streaming){
       const active = state.conversations.find(c=>c.id===state.activeConversationId);
       if(active) renderMessages(active);
     }
@@ -1458,8 +1518,11 @@ async function streamAssistantReply(conv, historyMessages, insertAtIndex){
     }
 
     const thinkingEl = document.getElementById(thinkingId);
-    thinkingEl.querySelector('.bubble').innerHTML = '<span class="live-text"></span><span class="stream-cursor"></span>';
-    const liveEl = thinkingEl.querySelector('.live-text');
+    let liveEl = null;
+    if(thinkingEl){
+      thinkingEl.querySelector('.bubble').innerHTML = '<span class="live-text"></span><span class="stream-cursor"></span>';
+      liveEl = thinkingEl.querySelector('.live-text');
+    }
 
     const reader = res.body.getReader();
     const decoder = new TextDecoder();
@@ -1480,7 +1543,7 @@ async function streamAssistantReply(conv, historyMessages, insertAtIndex){
           const delta = json.choices && json.choices[0] && json.choices[0].delta ? json.choices[0].delta.content : '';
           if(delta){
             fullText += delta;
-            liveEl.innerHTML = renderMarkdown(fullText);
+            if(liveEl) liveEl.innerHTML = renderMarkdown(fullText);
             document.getElementById('chatScroll').scrollTop = document.getElementById('chatScroll').scrollHeight;
           }
         }catch(_){ /* ignore parse errors on partial chunks */ }
